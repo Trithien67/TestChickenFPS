@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đo FPS trên thiết bị của bạn</title>
+    <style>
+        :root {
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+            --ios-orange: #FF9500;
+            --ios-gray: #8E8E93;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #F2F2F7;
+            margin: 0;
+            padding: 20px;
+            color: #1C1C1E;
+            max-width: 500px;
+            margin: 0 auto;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1C1C1E;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .fps-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .fps-item {
+            flex: 1;
+            min-width: 120px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .fps-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        
+        .fps-label {
+            font-size: 14px;
+            color: var(--ios-gray);
+        }
+        
+        .btn {
+            background-color: var(--ios-blue);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 17px;
+            font-weight: 500;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background-color: #0062CC;
+        }
+        
+        .btn:active {
+            background-color: #004999;
+        }
+        
+        .chicken-container {
+            border: 2px dashed #D1D1D6;
+            border-radius: 14px;
+            height: 200px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .chicken {
+            font-size: 24px;
+            position: absolute;
+            user-select: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .slider-container {
+            flex: 1;
+        }
+        
+        .slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #D1D1D6;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--ios-blue);
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            text-align: center;
+            font-size: 14px;
+            color: var(--ios-gray);
+            margin-top: 5px;
+        }
+        
+        #currentFps {
+            color: var(--ios-blue);
+        }
+        
+        #avgFps {
+            color: var(--ios-green);
+        }
+        
+        #minFps {
+            color: var(--ios-red);
+        }
+        
+        #maxFps {
+            color: var(--ios-orange);
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 14px;
+            color: var(--ios-gray);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Đo hiệu suất thiết bị</h1>
+    
+    <div class="card">
+        <div class="fps-container">
+            <div class="fps-item">
+                <div class="fps-label">FPS HIỆN TẠI</div>
+                <div class="fps-value" id="currentFps">--</div>
+            </div>
+            <div class="fps-item">
+                <div class="fps-label">FPS TRUNG BÌNH</div>
+                <div class="fps-value" id="avgFps">--</div>
+            </div>
+            <div class="fps-item">
+                <div class="fps-label">FPS TỐI THIỂU</div>
+                <div class="fps-value" id="minFps">--</div>
+            </div>
+            <div class="fps-item">
+                <div class="fps-label">FPS TỐI ĐA</div>
+                <div class="fps-value" id="maxFps">--</div>
+            </div>
+        </div>
+        
+        <button id="startBtn" class="btn">BẮT ĐẦU ĐO</button>
+        <div class="status" id="status">Nhấn BẮT ĐẦU để bắt đầu đo FPS</div>
+    </div>
+    
+    <div class="card">
+        <h3>Hiệu ứng gà 🐤</h3>
+        <div class="chicken-container" id="chickenContainer">
+            <span>Nhấn BẮT ĐẦU để hiển thị gà</span>
+        </div>
+        
+        <div class="controls">
+            <div class="slider-container">
+                <input type="range" min="1" max="5000" value="100" class="slider" id="chickenSlider">
+                <div class="slider-value">Số lượng gà: <span id="chickenCount">100</span>/5000</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Biến toàn cục
+        let isRunning = false;
+        let startTime;
+        let frameCount = 0;
+        let fpsValues = [];
+        let animationId;
+        let chickens = [];
+        
+        // Các phần tử DOM
+        const startBtn = document.getElementById('startBtn');
+        const currentFpsEl = document.getElementById('currentFps');
+        const avgFpsEl = document.getElementById('avgFps');
+        const minFpsEl = document.getElementById('minFps');
+        const maxFpsEl = document.getElementById('maxFps');
+        const statusEl = document.getElementById('status');
+        const chickenContainer = document.getElementById('chickenContainer');
+        const chickenSlider = document.getElementById('chickenSlider');
+        const chickenCountEl = document.getElementById('chickenCount');
+        
+        // Bắt đầu hoặc dừng đo FPS
+        startBtn.addEventListener('click', () => {
+            if (isRunning) {
+                stopTest();
+            } else {
+                startTest();
+            }
+        });
+        
+        // Xử lý thay đổi số lượng gà
+        chickenSlider.addEventListener('input', () => {
+            const count = parseInt(chickenSlider.value);
+            chickenCountEl.textContent = count;
+            
+            if (isRunning) {
+                updateChickenCount(count);
+            }
+        });
+        
+        function startTest() {
+            isRunning = true;
+            startBtn.textContent = 'DỪNG ĐO';
+            statusEl.textContent = 'Đang đo FPS...';
+            startTime = performance.now();
+            frameCount = 0;
+            fpsValues = [];
+            
+            // Xóa nội dung container
+            chickenContainer.innerHTML = '';
+            
+            // Tạo gà ban đầu
+            const initialCount = parseInt(chickenSlider.value);
+            createChickens(initialCount);
+            
+            // Bắt đầu vòng lặp đo FPS
+            animationId = requestAnimationFrame(measureFPS);
+        }
+        
+        function stopTest() {
+            isRunning = false;
+            startBtn.textContent = 'BẮT ĐẦU ĐO';
+            statusEl.textContent = 'Đã dừng đo FPS. Nhấn BẮT ĐẦU để đo lại.';
+            cancelAnimationFrame(animationId);
+            
+            // Xóa tất cả gà
+            chickenContainer.innerHTML = '<span>Nhấn BẮT ĐẦU để hiển thị gà</span>';
+            chickens = [];
+        }
+        
+        function measureFPS(timestamp) {
+            frameCount++;
+            
+            // Tính thời gian đã trôi qua (tính bằng giây)
+            const elapsed = (timestamp - startTime) / 1000;
+            
+            // Tính FPS mỗi giây
+            if (elapsed >= 1) {
+                const currentFps = Math.round(frameCount / elapsed);
+                
+                // Cập nhật giá trị FPS
+                currentFpsEl.textContent = currentFps;
+                fpsValues.push(currentFps);
+                
+                // Tính các thống kê
+                const avgFps = Math.round(fpsValues.reduce((a, b) => a + b, 0) / fpsValues.length);
+                const minFps = Math.min(...fpsValues);
+                const maxFps = Math.max(...fpsValues);
+                
+                avgFpsEl.textContent = avgFps;
+                minFpsEl.textContent = minFps;
+                maxFpsEl.textContent = maxFps;
+                
+                // Reset counter
+                frameCount = 0;
+                startTime = timestamp;
+                
+                // Cập nhật trạng thái dựa trên FPS
+                updateStatus(currentFps);
+            }
+            
+            // Di chuyển gà
+            moveChickens();
+            
+            // Tiếp tục vòng lặp
+            if (isRunning) {
+                animationId = requestAnimationFrame(measureFPS);
+            }
+        }
+        
+        function updateStatus(fps) {
+            if (fps >= 50) {
+                statusEl.textContent = `Hiệu suất tốt (${fps} FPS)`;
+                statusEl.style.color = '#34C759';
+            } else if (fps >= 30) {
+                statusEl.textContent = `Hiệu suất trung bình (${fps} FPS)`;
+                statusEl.style.color = '#FF9500';
+            } else {
+                statusEl.textContent = `Hiệu suất thấp (${fps} FPS)`;
+                statusEl.style.color = '#FF3B30';
+            }
+        }
+        
+        function createChickens(count) {
+            chickens = [];
+            const containerWidth = chickenContainer.clientWidth;
+            const containerHeight = chickenContainer.clientHeight;
+            
+            for (let i = 0; i < count; i++) {
+                const chicken = document.createElement('div');
+                chicken.className = 'chicken';
+                chicken.textContent = '🐤';
+                
+                // Vị trí ngẫu nhiên
+                const x = Math.random() * (containerWidth - 30);
+                const y = Math.random() * (containerHeight - 30);
+                
+                // Tốc độ ngẫu nhiên
+                const speedX = (Math.random() - 0.5) * 4;
+                const speedY = (Math.random() - 0.5) * 4;
+                
+                chicken.style.left = `${x}px`;
+                chicken.style.top = `${y}px`;
+                
+                chickenContainer.appendChild(chicken);
+                
+                chickens.push({
+                    element: chicken,
+                    x,
+                    y,
+                    speedX,
+                    speedY
+                });
+            }
+        }
+        
+        function updateChickenCount(newCount) {
+            const currentCount = chickens.length;
+            
+            if (newCount > currentCount) {
+                // Thêm gà mới
+                const containerWidth = chickenContainer.clientWidth;
+                const containerHeight = chickenContainer.clientHeight;
+                
+                for (let i = currentCount; i < newCount; i++) {
+                    const chicken = document.createElement('div');
+                    chicken.className = 'chicken';
+                    chicken.textContent = '🐤';
+                    
+                    const x = Math.random() * (containerWidth - 30);
+                    const y = Math.random() * (containerHeight - 30);
+                    const speedX = (Math.random() - 0.5) * 4;
+                    const speedY = (Math.random() - 0.5) * 4;
+                    
+                    chicken.style.left = `${x}px`;
+                    chicken.style.top = `${y}px`;
+                    
+                    chickenContainer.appendChild(chicken);
+                    
+                    chickens.push({
+                        element: chicken,
+                        x,
+                        y,
+                        speedX,
+                        speedY
+                    });
+                }
+            } else if (newCount < currentCount) {
+                // Xóa bớt gà
+                for (let i = currentCount - 1; i >= newCount; i--) {
+                    chickenContainer.removeChild(chickens[i].element);
+                    chickens.pop();
+                }
+            }
+        }
+        
+        function moveChickens() {
+            const containerWidth = chickenContainer.clientWidth;
+            const containerHeight = chickenContainer.clientHeight;
+            
+            chickens.forEach(chicken => {
+                // Cập nhật vị trí
+                chicken.x += chicken.speedX;
+                chicken.y += chicken.speedY;
+                
+                // Kiểm tra va chạm với biên
+                if (chicken.x <= 0 || chicken.x >= containerWidth - 30) {
+                    chicken.speedX *= -1;
+                    chicken.x = Math.max(0, Math.min(containerWidth - 30, chicken.x));
+                }
+                
+                if (chicken.y <= 0 || chicken.y >= containerHeight - 30) {
+                    chicken.speedY *= -1;
+                    chicken.y = Math.max(0, Math.min(containerHeight - 30, chicken.y));
+                }
+                
+                // Áp dụng vị trí mới
+                chicken.element.style.left = `${chicken.x}px`;
+                chicken.element.style.top = `${chicken.y}px`;
+                
+                // Hiệu ứng khi di chuột qua
+                chicken.element.onmouseover = () => {
+                    chicken.element.style.transform = 'scale(1.5)';
+                    setTimeout(() => {
+                        chicken.element.style.transform = 'scale(1)';
+                    }, 200);
+                };
+            });
+        }
+    </script>
+</body>
+  </html>
